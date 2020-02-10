@@ -746,13 +746,8 @@
         buffer.push(str);
 
         if (str === "\n" && !ignoreNewline) {
-          // TODO
-          let lineStr = "";
-          for (let i = 0, len = buffer.length; i < len; i++) {
-            lineStr += buffer[i];
-          }
           result.add(new SourceNode(bufferLine, bufferColumn, options.url,
-            lineStr));
+            buffer.join("")));
           buffer.splice(0, buffer.length);
           bufferLine = -1;
           bufferColumn = -1;
