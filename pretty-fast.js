@@ -246,24 +246,24 @@
    * Add the required whitespace before this token, whether that is a single
    * space, newline, and/or the indent on fresh lines.
    *
-   * @param {Object} token
+   * @param {object} token
    *        The token we are about to add to the pretty printed code.
-   * @param {Object} lastToken
+   * @param {object} lastToken
    *        The last token we added to the pretty printed code.
-   * @param {Boolean} addedNewline
+   * @param {boolean} addedNewline
    *        Whether we added a newline after adding the last token to the pretty
    *        printed code.
-   * @param {Boolean} addedSpace
+   * @param {boolean} addedSpace
    *        Whether we added a space after adding the last token to the pretty
    *        printed code. This only happens if an inline comment was printed
    *        since the last token.
-   * @param {Function} write
+   * @param {function} write
    *        The function to write pretty printed code to the result SourceNode.
-   * @param {Object} options
+   * @param {object} options
    *        The options object.
-   * @param {Number} indentLevel
+   * @param {number} indentLevel
    *        The number of indents deep we are.
-   * @param {Array} stack
+   * @param {string[]} stack
    *        The stack of open curlies, brackets, etc.
    * @returns {void}
    */
@@ -312,21 +312,11 @@
       spaceAdded = true;
     }
 
-    function ensureNewline() {
-      if (!newlineAdded) {
-        write("\n",
-          lastToken.loc.start.line,
-          lastToken.loc.start.column);
-        newlineAdded = true;
-      }
-    }
-
-    if (isASI(token, lastToken)) {
-      ensureNewline();
-    }
-
-    if (decrementsIndent(ttl, stack)) {
-      ensureNewline();
+    if (!newlineAdded && (isASI(token, lastToken) || decrementsIndent(ttl, stack))) {
+      write("\n",
+        lastToken.loc.start.line,
+        lastToken.loc.start.column);
+      newlineAdded = true;
     }
 
     if (newlineAdded) {
