@@ -12,7 +12,7 @@
   } else {
     root.prettyFast = factory();
   }
-}(this, function() {
+}(this, function () {
   "use strict";
 
   const acorn = this.acorn || require("acorn/dist/acorn");
@@ -27,49 +27,15 @@
   // curly is going to be an array literal, so we brush the complication under
   // the rug, and handle the ambiguity by always assuming that it will be an
   // array literal.
-  const PRE_ARRAY_LITERAL_TOKENS = {
-    "typeof": true,
-    "void": true,
-    "delete": true,
-    "case": true,
-    "do": true,
-    "=": true,
-    "in": true,
-    "{": true,
-    "*": true,
-    "/": true,
-    "%": true,
-    "else": true,
-    ";": true,
-    "++": true,
-    "--": true,
-    "+": true,
-    "-": true,
-    "~": true,
-    "!": true,
-    ":": true,
-    "?": true,
-    ">>": true,
-    ">>>": true,
-    "<<": true,
-    "||": true,
-    "&&": true,
-    "<": true,
-    ">": true,
-    "<=": true,
-    ">=": true,
-    "instanceof": true,
-    "&": true,
-    "^": true,
-    "|": true,
-    "==": true,
-    "!=": true,
-    "===": true,
-    "!==": true,
-    ",": true,
-
-    "}": true
-  };
+  const PRE_ARRAY_LITERAL_TOKENS = [
+    "typeof", "void", "delete", "case", "do", "in", "else", "instanceof",
+    "=", "{",
+    "*", "/", "%",
+    ";", "++", "--", "+", "-", "~", "!",
+    ":", "?", ">>", ">>>", "<<",
+    "||", "&&", "<", ">", "<=", ">=",
+    "&", "^", "|", "==", "!=", "===", "!==", ",", "}"
+  ];
 
   /**
    * Determines if we think that the given token starts an array literal.
@@ -86,111 +52,43 @@
     if (token.type.label !== "[") {
       return false;
     }
-    if (!lastToken) {
+    if (!lastToken || lastToken.type.isAssign) {
       return true;
     }
-    if (lastToken.type.isAssign) {
-      return true;
-    }
-    return !!PRE_ARRAY_LITERAL_TOKENS[
-      lastToken.type.keyword || lastToken.type.label
-    ];
+    return PRE_ARRAY_LITERAL_TOKENS.includes(
+      lastToken.type.keyword || lastToken.type.label);
   }
 
   // If any of these tokens are followed by a token on a new line, we know that
   // ASI cannot happen.
-  const PREVENT_ASI_AFTER_TOKENS = {
+  const PREVENT_ASI_AFTER_TOKENS = [
     // Binary operators
-    "*": true,
-    "/": true,
-    "%": true,
-    "+": true,
-    "-": true,
-    "<<": true,
-    ">>": true,
-    ">>>": true,
-    "<": true,
-    ">": true,
-    "<=": true,
-    ">=": true,
-    "instanceof": true,
-    "in": true,
-    "==": true,
-    "!=": true,
-    "===": true,
-    "!==": true,
-    "&": true,
-    "^": true,
-    "|": true,
-    "&&": true,
-    "||": true,
-    ",": true,
-    ".": true,
-    "=": true,
-    "*=": true,
-    "/=": true,
-    "%=": true,
-    "+=": true,
-    "-=": true,
-    "<<=": true,
-    ">>=": true,
-    ">>>=": true,
-    "&=": true,
-    "^=": true,
-    "|=": true,
+    "*", "/", "%", "+", "-",
+    "<<", ">>", ">>>",
+    "<", ">", "<=", ">=",
+    "instanceof", "in",
+    "==", "!=", "===", "!==",
+    "&", "^", "|", "&&", "||", ",", ".",
+    "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", ">>>=", "&=", "^=", "|=",
     // Unary operators
-    "delete": true,
-    "void": true,
-    "typeof": true,
-    "~": true,
-    "!": true,
-    "new": true,
+    "delete", "void", "typeof", "~", "!", "new",
     // Function calls and grouped expressions
-    "(": true
-  };
+    "("
+  ];
 
   // If any of these tokens are on a line after the token before it, we know
   // that ASI cannot happen.
-  const PREVENT_ASI_BEFORE_TOKENS = {
+  const PREVENT_ASI_BEFORE_TOKENS = [
     // Binary operators
-    "*": true,
-    "/": true,
-    "%": true,
-    "<<": true,
-    ">>": true,
-    ">>>": true,
-    "<": true,
-    ">": true,
-    "<=": true,
-    ">=": true,
-    "instanceof": true,
-    "in": true,
-    "==": true,
-    "!=": true,
-    "===": true,
-    "!==": true,
-    "&": true,
-    "^": true,
-    "|": true,
-    "&&": true,
-    "||": true,
-    ",": true,
-    ".": true,
-    "=": true,
-    "*=": true,
-    "/=": true,
-    "%=": true,
-    "+=": true,
-    "-=": true,
-    "<<=": true,
-    ">>=": true,
-    ">>>=": true,
-    "&=": true,
-    "^=": true,
-    "|=": true,
+    "*", "/", "%", "<<", ">>", ">>>",
+    "<", ">", "<=", ">=",
+    "instanceof", "in",
+    "==", "!=", "===", "!==",
+    "&", "^", "|", "&&", "||", ",", ".",
+    "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", ">>>=", "&=", "^=", "|=",
     // Function calls
-    "(": true
-  };
+    "("
+  ];
 
   /**
    * Determine if a token can look like an identifier. More precisely,
@@ -203,9 +101,8 @@
    * @returns {Boolean}
    *          True if identifier-like.
    */
-  function isIdentifierLike(token) {
-    const ttl = token.type.label;
-    return ttl === "name" || ttl === "num" || !!token.type.keyword;
+  function isIdentifierLike({type: {label, keyword}}) {
+    return label === "name" || label === "num" || !!keyword;
   }
 
   /**
@@ -228,19 +125,14 @@
       return false;
     }
     if (lastToken.type.keyword === "return"
-        || lastToken.type.keyword === "yield"
-        || (lastToken.type.label === "name" && lastToken.value === "yield")) {
+      || lastToken.type.keyword === "yield"
+      || (lastToken.type.label === "name" && lastToken.value === "yield")) {
       return true;
     }
-    if (PREVENT_ASI_AFTER_TOKENS[
-      lastToken.type.label || lastToken.type.keyword
-    ]) {
-      return false;
-    }
-    if (PREVENT_ASI_BEFORE_TOKENS[token.type.label || token.type.keyword]) {
-      return false;
-    }
-    return true;
+    return !(
+      PREVENT_ASI_AFTER_TOKENS.includes(lastToken.type.label || lastToken.type.keyword) ||
+      PREVENT_ASI_BEFORE_TOKENS.includes(token.type.label     || token.type.keyword));
+
   }
 
   /**
@@ -301,30 +193,12 @@
    */
   function needsSpaceAfter(token, lastToken) {
     if (lastToken) {
-      if (lastToken.type.isLoop) {
-        return true;
-      }
-      if (lastToken.type.isAssign) {
-        return true;
-      }
-      if (lastToken.type.binop != null) {
+      if (lastToken.type.isLoop || lastToken.type.isAssign || lastToken.type.binop != null) {
         return true;
       }
 
       const ltt = lastToken.type.label;
-      if (ltt === "?") {
-        return true;
-      }
-      if (ltt === ":") {
-        return true;
-      }
-      if (ltt === ",") {
-        return true;
-      }
-      if (ltt === ";") {
-        return true;
-      }
-      if (ltt === "${") {
+      if (["?", ":", ",", ";", "${"].includes(ltt)) {
         return true;
       }
       if (ltt === "num" && token.type.label === ".") {
@@ -333,32 +207,19 @@
 
       const ltk = lastToken.type.keyword;
       if (ltk != null) {
-        if (ltk === "break" || ltk === "continue" || ltk === "return") {
+        if (["break", "continue", "return"].includes(ltk)) {
           return token.type.label !== ";";
         }
-        if (ltk !== "debugger"
-            && ltk !== "null"
-            && ltk !== "true"
-            && ltk !== "false"
-            && ltk !== "this"
-            && ltk !== "default") {
+        if (!["debugger", "null", "true", "false", "this", "default"].includes(ltk)) {
           return true;
         }
       }
 
-      if (ltt === ")" && (token.type.label !== ")"
-                         && token.type.label !== "]"
-                         && token.type.label !== ";"
-                         && token.type.label !== ","
-                         && token.type.label !== ".")) {
+      if (ltt === ")" && (![")", "]", ";", ",", "."].includes(token.type.label))) {
         return true;
       }
 
-      if (lastToken.value === "let") {
-        return true;
-      }
-
-      if (lastToken.value === "const") {
+      if (["let", "const"].includes(lastToken.value)) {
         return true;
       }
 
@@ -378,11 +239,7 @@
     if (token.type.binop != null && lastToken) {
       return true;
     }
-    if (token.type.label === "?") {
-      return true;
-    }
-
-    return false;
+    return token.type.label === "?";
   }
 
   /**
@@ -428,20 +285,12 @@
           lastToken.loc.start.line,
           lastToken.loc.start.column);
         spaceAdded = true;
-      } else if (ttk === "else" ||
-                 ttk === "catch" ||
-                 ttk === "finally") {
+      } else if (["else", "catch", "finally"].includes(ttk)) {
         write(" ",
           lastToken.loc.start.line,
           lastToken.loc.start.column);
         spaceAdded = true;
-      } else if (ttl !== "(" &&
-                 ttl !== ";" &&
-                 ttl !== "," &&
-                 ttl !== ")" &&
-                 ttl !== "." &&
-                 ttl !== "template" &&
-                 ttl !== "`") {
+      } else if (!["(", ";", ",", ")", ".", "template", "`"].includes(ttl)) {
         write("\n",
           lastToken.loc.start.line,
           lastToken.loc.start.column);
@@ -494,7 +343,7 @@
       write(" ",
         lastToken.loc.start.line,
         lastToken.loc.start.column);
-      spaceAdded = true;
+      // spaceAdded = true; ?
     }
   }
 
@@ -558,6 +407,7 @@
 
     return str => str.replace(escapeCharactersRegExp, (_, c) => escapeCharacters[c]);
   })());
+
   /**
    * Add the given token to the pretty printed results.
    *
@@ -814,24 +664,20 @@
     const tokens = acorn.tokenizer(input, {
       locations: true,
       sourceFile: options.url,
-      onComment: function (block, text, start, end, startLoc, endLoc) {
+      onComment: (block, text, start, end, startLoc, endLoc) =>
         tokenQueue.push({
           type: {},
           comment: true,
           block: block,
           text: text,
-          loc: { start: startLoc, end: endLoc }
-        });
-      }
+          loc: {start: startLoc, end: endLoc}
+        })
     });
 
-    for (;;) {
+    do {
       token = tokens.getToken();
       tokenQueue.push(token);
-      if (token.type.label === "eof") {
-        break;
-      }
-    }
+    } while (token.type.label !== "eof");
 
     for (let i = 0; i < tokenQueue.length; i++) {
       token = tokenQueue[i];
@@ -864,18 +710,14 @@
       token.isArrayLiteral = isArrayLiteral(token, lastToken);
 
       if (belongsOnStack(token)) {
-        if (token.isArrayLiteral) {
-          stack.push("[\n");
-        } else {
-          stack.push(ttl || ttk);
-        }
+        stack.push(token.isArrayLiteral ? "[\n" : ttl || ttk);
       }
 
       if (decrementsIndent(ttl, stack)) {
         indentLevel--;
         if (ttl === "}"
-            && stack.length > 1
-            && stack[stack.length - 2] === "switch") {
+          && stack.length > 1
+          && stack[stack.length - 2] === "switch") {
           indentLevel--;
         }
       }
@@ -894,7 +736,7 @@
       if (shouldStackPop(token, stack)) {
         stack.pop();
         if (ttl === "}" && stack.length
-            && stack[stack.length - 1] === "switch") {
+          && stack[stack.length - 1] === "switch") {
           stack.pop();
         }
       }
@@ -908,20 +750,12 @@
       // object the same way that acorn reuses the token object. This allows us
       // to avoid allocations and minimize GC pauses.
       if (!lastToken) {
-        lastToken = { loc: { start: {}, end: {} } };
+        lastToken = {loc: {start: {}, end: {}}};
       }
-      lastToken.start = token.start;
-      lastToken.end = token.end;
-      lastToken.loc.start.line = token.loc.start.line;
-      lastToken.loc.start.column = token.loc.start.column;
-      lastToken.loc.end.line = token.loc.end.line;
-      lastToken.loc.end.column = token.loc.end.column;
-      lastToken.type = token.type;
-      lastToken.value = token.value;
-      lastToken.isArrayLiteral = token.isArrayLiteral;
+      lastToken = Object.assign(lastToken, token);
     }
 
-    return result.toStringWithSourceMap({ file: options.url });
+    return result.toStringWithSourceMap({file: options.url});
   };
 
 }.bind(this)));
