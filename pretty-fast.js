@@ -7,19 +7,17 @@
 (function (root, factory) {
   "use strict";
 
-  if (typeof define === "function" && define.amd) {
-    define(factory);
-  } else if (typeof exports === "object") {
+  if (typeof exports === "object") {
     module.exports = factory();
   } else {
     root.prettyFast = factory();
   }
-}(this, function () {
+}(this, function() {
   "use strict";
 
-  var acorn = this.acorn || require("acorn/dist/acorn");
-  var sourceMap = this.sourceMap || require("source-map");
-  var SourceNode = sourceMap.SourceNode;
+  const acorn = this.acorn || require("acorn/dist/acorn");
+  const sourceMap = this.sourceMap || require("source-map");
+  const SourceNode = sourceMap.SourceNode;
 
   // If any of these tokens are seen before a "[" token, we know that "[" token
   // is the start of an array literal, rather than a property access.
@@ -29,7 +27,7 @@
   // curly is going to be an array literal, so we brush the complication under
   // the rug, and handle the ambiguity by always assuming that it will be an
   // array literal.
-  var PRE_ARRAY_LITERAL_TOKENS = {
+  const PRE_ARRAY_LITERAL_TOKENS = {
     "typeof": true,
     "void": true,
     "delete": true,
@@ -76,16 +74,16 @@
   /**
    * Determines if we think that the given token starts an array literal.
    *
-   * @param Object token
+   * @param {Object} token
    *        The token we want to determine if it is an array literal.
-   * @param Object lastToken
+   * @param {Object} lastToken
    *        The last token we added to the pretty printed results.
    *
-   * @returns Boolean
+   * @returns {Boolean}
    *          True if we believe it is an array literal, false otherwise.
    */
   function isArrayLiteral(token, lastToken) {
-    if (token.type.label != "[") {
+    if (token.type.label !== "[") {
       return false;
     }
     if (!lastToken) {
@@ -101,7 +99,7 @@
 
   // If any of these tokens are followed by a token on a new line, we know that
   // ASI cannot happen.
-  var PREVENT_ASI_AFTER_TOKENS = {
+  const PREVENT_ASI_AFTER_TOKENS = {
     // Binary operators
     "*": true,
     "/": true,
@@ -153,7 +151,7 @@
 
   // If any of these tokens are on a line after the token before it, we know
   // that ASI cannot happen.
-  var PREVENT_ASI_BEFORE_TOKENS = {
+  const PREVENT_ASI_BEFORE_TOKENS = {
     // Binary operators
     "*": true,
     "/": true,
@@ -199,27 +197,27 @@
    * this determines if the token may end or start with a character from
    * [A-Za-z0-9_].
    *
-   * @param Object token
+   * @param {Object} token
    *        The token we are looking at.
    *
-   * @returns Boolean
+   * @returns {Boolean}
    *          True if identifier-like.
    */
   function isIdentifierLike(token) {
-    var ttl = token.type.label;
-    return ttl == "name" || ttl == "num" || !!token.type.keyword;
+    const ttl = token.type.label;
+    return ttl === "name" || ttl === "num" || !!token.type.keyword;
   }
 
   /**
    * Determines if Automatic Semicolon Insertion (ASI) occurs between these
    * tokens.
    *
-   * @param Object token
+   * @param {Object} token
    *        The current token.
-   * @param Object lastToken
+   * @param {Object} lastToken
    *        The last token we added to the pretty printed results.
    *
-   * @returns Boolean
+   * @returns {Boolean}
    *          True if we believe ASI occurs.
    */
   function isASI(token, lastToken) {
@@ -229,9 +227,9 @@
     if (token.loc.start.line === lastToken.loc.start.line) {
       return false;
     }
-    if (lastToken.type.keyword == "return"
-        || lastToken.type.keyword == "yield"
-        || (lastToken.type.label == "name" && lastToken.value == "yield")) {
+    if (lastToken.type.keyword === "return"
+        || lastToken.type.keyword === "yield"
+        || (lastToken.type.label === "name" && lastToken.value === "yield")) {
       return true;
     }
     if (PREVENT_ASI_AFTER_TOKENS[
@@ -248,38 +246,38 @@
   /**
    * Determine if we should add a newline after the given token.
    *
-   * @param Object token
+   * @param {Object} token
    *        The token we are looking at.
-   * @param Array stack
+   * @param {Array} stack
    *        The stack of open parens/curlies/brackets/etc.
    *
-   * @returns Boolean
+   * @returns {Boolean}
    *          True if we should add a newline.
    */
   function isLineDelimiter(token, stack) {
     if (token.isArrayLiteral) {
       return true;
     }
-    var ttl = token.type.label;
-    var top = stack[stack.length - 1];
-    return ttl == ";" && top != "("
-      || ttl == "{"
-      || ttl == "," && top != "("
-      || ttl == ":" && (top == "case" || top == "default");
+    const ttl = token.type.label;
+    const top = stack[stack.length - 1];
+    return ttl === ";" && top !== "("
+      || ttl === "{"
+      || ttl === "," && top !== "("
+      || ttl === ":" && (top === "case" || top === "default");
   }
 
   /**
    * Append the necessary whitespace to the result after we have added the given
    * token.
    *
-   * @param Object token
+   * @param {Object} token
    *        The token that was just added to the result.
-   * @param Function write
+   * @param {Function} write
    *        The function to write to the pretty printed results.
-   * @param Array stack
+   * @param {Array} stack
    *        The stack of open parens/curlies/brackets/etc.
    *
-   * @returns Boolean
+   * @returns {Boolean}
    *          Returns true if we added a newline to result, false in all other
    *          cases.
    */
@@ -295,10 +293,11 @@
    * Determines if we need to add a space between the last token we added and
    * the token we are about to add.
    *
-   * @param Object token
+   * @param {Object} token
    *        The token we are about to add to the pretty printed code.
-   * @param Object lastToken
+   * @param {Object} lastToken
    *        The last token added to the pretty printed code.
+   * @returns {boolean} true if token needs a space after
    */
   function needsSpaceAfter(token, lastToken) {
     if (lastToken) {
@@ -312,54 +311,54 @@
         return true;
       }
 
-      var ltt = lastToken.type.label;
-      if (ltt == "?") {
+      const ltt = lastToken.type.label;
+      if (ltt === "?") {
         return true;
       }
-      if (ltt == ":") {
+      if (ltt === ":") {
         return true;
       }
-      if (ltt == ",") {
+      if (ltt === ",") {
         return true;
       }
-      if (ltt == ";") {
+      if (ltt === ";") {
         return true;
       }
-      if (ltt == "${") {
+      if (ltt === "${") {
         return true;
       }
-      if (ltt == "num" && token.type.label == ".") {
+      if (ltt === "num" && token.type.label === ".") {
         return true;
       }
 
-      var ltk = lastToken.type.keyword;
+      const ltk = lastToken.type.keyword;
       if (ltk != null) {
-        if (ltk == "break" || ltk == "continue" || ltk == "return") {
-          return token.type.label != ";";
+        if (ltk === "break" || ltk === "continue" || ltk === "return") {
+          return token.type.label !== ";";
         }
-        if (ltk != "debugger"
-            && ltk != "null"
-            && ltk != "true"
-            && ltk != "false"
-            && ltk != "this"
-            && ltk != "default") {
+        if (ltk !== "debugger"
+            && ltk !== "null"
+            && ltk !== "true"
+            && ltk !== "false"
+            && ltk !== "this"
+            && ltk !== "default") {
           return true;
         }
       }
 
-      if (ltt == ")" && (token.type.label != ")"
-                         && token.type.label != "]"
-                         && token.type.label != ";"
-                         && token.type.label != ","
-                         && token.type.label != ".")) {
+      if (ltt === ")" && (token.type.label !== ")"
+                         && token.type.label !== "]"
+                         && token.type.label !== ";"
+                         && token.type.label !== ","
+                         && token.type.label !== ".")) {
         return true;
       }
 
-      if (lastToken.value == "let") {
+      if (lastToken.value === "let") {
         return true;
       }
 
-      if (lastToken.value == "const") {
+      if (lastToken.value === "const") {
         return true;
       }
 
@@ -368,7 +367,7 @@
         return true;
       }
 
-      if (token.type.label == "{" && lastToken.type.label == "name") {
+      if (token.type.label === "{" && lastToken.type.label === "name") {
         return true;
       }
     }
@@ -379,7 +378,7 @@
     if (token.type.binop != null && lastToken) {
       return true;
     }
-    if (token.type.label == "?") {
+    if (token.type.label === "?") {
       return true;
     }
 
@@ -390,84 +389,85 @@
    * Add the required whitespace before this token, whether that is a single
    * space, newline, and/or the indent on fresh lines.
    *
-   * @param Object token
+   * @param {Object} token
    *        The token we are about to add to the pretty printed code.
-   * @param Object lastToken
+   * @param {Object} lastToken
    *        The last token we added to the pretty printed code.
-   * @param Boolean addedNewline
+   * @param {Boolean} addedNewline
    *        Whether we added a newline after adding the last token to the pretty
    *        printed code.
-   * @param Boolean addedSpace
+   * @param {Boolean} addedSpace
    *        Whether we added a space after adding the last token to the pretty
    *        printed code. This only happens if an inline comment was printed
    *        since the last token.
-   * @param Function write
+   * @param {Function} write
    *        The function to write pretty printed code to the result SourceNode.
-   * @param Object options
+   * @param {Object} options
    *        The options object.
-   * @param Number indentLevel
+   * @param {Number} indentLevel
    *        The number of indents deep we are.
-   * @param Array stack
+   * @param {Array} stack
    *        The stack of open curlies, brackets, etc.
+   * @returns {void}
    */
   function prependWhiteSpace(token, lastToken, addedNewline, addedSpace, write, options,
-                             indentLevel, stack) {
-    var ttk = token.type.keyword;
-    var ttl = token.type.label;
-    var newlineAdded = addedNewline;
-    var spaceAdded = addedSpace;
-    var ltt = lastToken ? lastToken.type.label : null;
+    indentLevel, stack) {
+    const ttk = token.type.keyword;
+    const ttl = token.type.label;
+    let newlineAdded = addedNewline;
+    let spaceAdded = addedSpace;
+    const ltt = lastToken ? lastToken.type.label : null;
 
     // Handle whitespace and newlines after "}" here instead of in
     // `isLineDelimiter` because it is only a line delimiter some of the
     // time. For example, we don't want to put "else if" on a new line after
     // the first if's block.
-    if (lastToken && ltt == "}") {
-      if (ttk == "while" && stack[stack.length - 1] == "do") {
+    if (lastToken && ltt === "}") {
+      if (ttk === "while" && stack[stack.length - 1] === "do") {
         write(" ",
-              lastToken.loc.start.line,
-              lastToken.loc.start.column);
+          lastToken.loc.start.line,
+          lastToken.loc.start.column);
         spaceAdded = true;
-      } else if (ttk == "else" ||
-                 ttk == "catch" ||
-                 ttk == "finally") {
+      } else if (ttk === "else" ||
+                 ttk === "catch" ||
+                 ttk === "finally") {
         write(" ",
-              lastToken.loc.start.line,
-              lastToken.loc.start.column);
+          lastToken.loc.start.line,
+          lastToken.loc.start.column);
         spaceAdded = true;
-      } else if (ttl != "(" &&
-                 ttl != ";" &&
-                 ttl != "," &&
-                 ttl != ")" &&
-                 ttl != "." &&
-                 ttl != "template" &&
-                 ttl != "`") {
+      } else if (ttl !== "(" &&
+                 ttl !== ";" &&
+                 ttl !== "," &&
+                 ttl !== ")" &&
+                 ttl !== "." &&
+                 ttl !== "template" &&
+                 ttl !== "`") {
         write("\n",
-              lastToken.loc.start.line,
-              lastToken.loc.start.column);
+          lastToken.loc.start.line,
+          lastToken.loc.start.column);
         newlineAdded = true;
       }
     }
 
-    if ((ttl == ":" && stack[stack.length - 1] == "?") || (ttl == "}" && stack[stack.length - 1] == "${")) {
+    if ((ttl === ":" && stack[stack.length - 1] === "?") || (ttl === "}" && stack[stack.length - 1] === "${")) {
       write(" ",
-            lastToken.loc.start.line,
-            lastToken.loc.start.column);
+        lastToken.loc.start.line,
+        lastToken.loc.start.column);
       spaceAdded = true;
     }
 
-    if (lastToken && ltt != "}" && ttk == "else") {
+    if (lastToken && ltt !== "}" && ttk === "else") {
       write(" ",
-            lastToken.loc.start.line,
-            lastToken.loc.start.column);
+        lastToken.loc.start.line,
+        lastToken.loc.start.column);
       spaceAdded = true;
     }
 
     function ensureNewline() {
       if (!newlineAdded) {
         write("\n",
-              lastToken.loc.start.line,
-              lastToken.loc.start.column);
+          lastToken.loc.start.line,
+          lastToken.loc.start.column);
         newlineAdded = true;
       }
     }
@@ -481,19 +481,19 @@
     }
 
     if (newlineAdded) {
-      if (ttk == "case" || ttk == "default") {
+      if (ttk === "case" || ttk === "default") {
         write(repeat(options.indent, indentLevel - 1),
-              token.loc.start.line,
-              token.loc.start.column);
+          token.loc.start.line,
+          token.loc.start.column);
       } else {
         write(repeat(options.indent, indentLevel),
-              token.loc.start.line,
-              token.loc.start.column);
+          token.loc.start.line,
+          token.loc.start.column);
       }
     } else if (!spaceAdded && needsSpaceAfter(token, lastToken)) {
       write(" ",
-            lastToken.loc.start.line,
-            lastToken.loc.start.column);
+        lastToken.loc.start.line,
+        lastToken.loc.start.column);
       spaceAdded = true;
     }
   }
@@ -501,16 +501,16 @@
   /**
    * Repeat the `str` string `n` times.
    *
-   * @param String str
+   * @param {String} str
    *        The string to be repeated.
-   * @param Number n
+   * @param {Number} n
    *        The number of times to repeat the string.
    *
-   * @returns String
+   * @returns {String}
    *          The repeated string.
    */
   function repeat(str, n) {
-    var result = "";
+    let result = "";
     while (n > 0) {
       if (n & 1) {
         result += str;
@@ -525,8 +525,8 @@
    * Make sure that we output the escaped character combination inside string
    * literals instead of various problematic characters.
    */
-  var sanitize = (function () {
-    var escapeCharacters = {
+  const sanitize = ((() => {
+    const escapeCharacters = {
       // Backslash
       "\\": "\\\\",
       // Newlines
@@ -549,130 +549,135 @@
       "'": "\\'"
     };
 
-    var regExpString = "("
+    const regExpString = "("
       + Object.keys(escapeCharacters)
-              .map(function (c) { return escapeCharacters[c]; })
-              .join("|")
+        .map(c => escapeCharacters[c])
+        .join("|")
       + ")";
-    var escapeCharactersRegExp = new RegExp(regExpString, "g");
+    const escapeCharactersRegExp = new RegExp(regExpString, "g");
 
-    return function (str) {
-      return str.replace(escapeCharactersRegExp, function (_, c) {
-        return escapeCharacters[c];
-      });
-    };
-  }());
+    return str => str.replace(escapeCharactersRegExp, (_, c) => escapeCharacters[c]);
+  })());
   /**
    * Add the given token to the pretty printed results.
    *
-   * @param Object token
+   * @param {Object} token
    *        The token to add.
-   * @param Function write
+   * @param {Function} write
    *        The function to write pretty printed code to the result SourceNode.
+   * @returns {void}
    */
   function addToken(token, write) {
-    if (token.type.label == "string") {
+    if (token.type.label === "string") {
       write("'" + sanitize(token.value) + "'",
-            token.loc.start.line,
-            token.loc.start.column);
-    } else if (token.type.label == "regexp") {
+        token.loc.start.line,
+        token.loc.start.column);
+    } else if (token.type.label === "regexp") {
       write(String(token.value.value),
-            token.loc.start.line,
-            token.loc.start.column);
+        token.loc.start.line,
+        token.loc.start.column);
     } else {
       write(String(token.value != null ? token.value : token.type.label),
-            token.loc.start.line,
-            token.loc.start.column);
+        token.loc.start.line,
+        token.loc.start.column);
     }
   }
 
   /**
-   * Returns true if the given token type belongs on the stack.
+   *
+   * @param {object} token to check
+   * @returns {boolean} True if the token belongs on the stack
    */
   function belongsOnStack(token) {
-    var ttl = token.type.label;
-    var ttk = token.type.keyword;
-    return ttl == "{"
-      || ttl == "("
-      || ttl == "["
-      || ttl == "?"
-      || ttl == "${"
-      || ttk == "do"
-      || ttk == "switch"
-      || ttk == "case"
-      || ttk == "default";
+    const ttl = token.type.label;
+    const ttk = token.type.keyword;
+    return ttl === "{"
+      || ttl === "("
+      || ttl === "["
+      || ttl === "?"
+      || ttl === "${"
+      || ttk === "do"
+      || ttk === "switch"
+      || ttk === "case"
+      || ttk === "default";
   }
 
   /**
-   * Returns true if the given token should cause us to pop the stack.
+   *
+   * @param {object} token to check
+   * @param {string[]} stack to pop from
+   * @returns {boolean} true if the given token should cause us to pop the stack.
    */
   function shouldStackPop(token, stack) {
-    var ttl = token.type.label;
-    var ttk = token.type.keyword;
-    var top = stack[stack.length - 1];
-    return ttl == "]"
-      || ttl == ")"
-      || ttl == "}"
-      || (ttl == ":" && (top == "case" || top == "default" || top == "?"))
-      || (ttk == "while" && top == "do");
+    const ttl = token.type.label;
+    const ttk = token.type.keyword;
+    const top = stack[stack.length - 1];
+    return ttl === "]"
+      || ttl === ")"
+      || ttl === "}"
+      || (ttl === ":" && (top === "case" || top === "default" || top === "?"))
+      || (ttk === "while" && top === "do");
   }
 
   /**
-   * Returns true if the given token type should cause us to decrement the
+   * @param {string} tokenType - type to check
+   * @param {string[]} stack - current stack
+   * @returns {boolean}  true if the given token type should cause us to decrement the
    * indent level.
    */
   function decrementsIndent(tokenType, stack) {
-    return (tokenType == "}" && stack[stack.length - 1] != "${")
-      || (tokenType == "]" && stack[stack.length - 1] == "[\n");
+    return (tokenType === "}" && stack[stack.length - 1] !== "${")
+      || (tokenType === "]" && stack[stack.length - 1] === "[\n");
   }
 
   /**
-   * Returns true if the given token should cause us to increment the indent
+   * @param {object} token - token to check
+   * @returns {boolean} true if the given token should cause us to increment the indent
    * level.
    */
   function incrementsIndent(token) {
-    return token.type.label == "{"
+    return token.type.label === "{"
       || token.isArrayLiteral
-      || token.type.keyword == "switch";
+      || token.type.keyword === "switch";
   }
 
   /**
    * Add a comment to the pretty printed code.
    *
-   * @param Function write
+   * @param {function} write
    *        The function to write pretty printed code to the result SourceNode.
-   * @param Number indentLevel
+   * @param {number} indentLevel
    *        The number of indents deep we are.
-   * @param Object options
+   * @param {object} options
    *        The options object.
-   * @param Boolean block
+   * @param {boolean} block
    *        True if the comment is a multiline block style comment.
-   * @param String text
+   * @param {string} text
    *        The text of the comment.
-   * @param Number line
+   * @param {number} line
    *        The line number to comment appeared on.
-   * @param Number column
+   * @param {number} column
    *        The column number the comment appeared on.
-   * @param Object nextToken
+   * @param {object} nextToken
    *        The next token if any.
    *
-   * @returns Boolean newlineAdded
+   * @returns {boolean} newlineAdded
    *        True if a newline was added.
    */
   function addComment(write, indentLevel, options, block, text, line, column, nextToken) {
-    var indentString = repeat(options.indent, indentLevel);
-    var needNewline = true;
+    const indentString = repeat(options.indent, indentLevel);
+    let needNewline = true;
 
     write(indentString, line, column);
     if (block) {
       write("/*");
       // We must pass ignoreNewline in case the comment happens to be "\n".
       write(text
-            .split(new RegExp("/\n" + indentString + "/", "g"))
-            .join("\n" + indentString),
-            null, null, true);
+        .split(new RegExp("/\n" + indentString + "/", "g"))
+        .join("\n" + indentString),
+      null, null, true);
       write("*/");
-      needNewline = !(nextToken && nextToken.loc.start.line == line);
+      needNewline = !(nextToken && nextToken.loc.start.line === line);
     } else {
       write("//");
       write(text);
@@ -688,25 +693,25 @@
   /**
    * The main function.
    *
-   * @param String input
+   * @param {String} input
    *        The ugly JS code we want to pretty print.
-   * @param Object options
+   * @param {Object} options
    *        The options object. Provides configurability of the pretty
    *        printing. Properties:
    *          - url: The URL string of the ugly JS code.
    *          - indent: The string to indent code by.
    *
-   * @returns Object
+   * @returns {Object}
    *          An object with the following properties:
    *            - code: The pretty printed code string.
    *            - map: A SourceMapGenerator instance.
    */
   return function prettyFast(input, options) {
     // The level of indents deep we are.
-    var indentLevel = 0;
+    let indentLevel = 0;
 
     // We will accumulate the pretty printed code in this SourceNode.
-    var result = new SourceNode();
+    const result = new SourceNode();
 
     /**
      * Write a pretty printed string to the result SourceNode.
@@ -727,10 +732,10 @@
      * @param Boolean ignoreNewline
      *        If true, a single "\n" won't result in an additional mapping.
      */
-    var write = (function () {
-      var buffer = [];
-      var bufferLine = -1;
-      var bufferColumn = -1;
+    const write = (function () {
+      const buffer = [];
+      let bufferLine = -1;
+      let bufferColumn = -1;
       return function write(str, line, column, ignoreNewline) {
         if (line != null && bufferLine === -1) {
           bufferLine = line;
@@ -740,13 +745,14 @@
         }
         buffer.push(str);
 
-        if (str == "\n" && !ignoreNewline) {
-          var lineStr = "";
-          for (var i = 0, len = buffer.length; i < len; i++) {
+        if (str === "\n" && !ignoreNewline) {
+          // TODO
+          let lineStr = "";
+          for (let i = 0, len = buffer.length; i < len; i++) {
             lineStr += buffer[i];
           }
           result.add(new SourceNode(bufferLine, bufferColumn, options.url,
-                                    lineStr));
+            lineStr));
           buffer.splice(0, buffer.length);
           bufferLine = -1;
           bufferColumn = -1;
@@ -755,24 +761,24 @@
     }());
 
     // Whether or not we added a newline on after we added the last token.
-    var addedNewline = false;
+    let addedNewline = false;
 
     // Whether or not we added a space after we added the last token.
-    var addedSpace = false;
+    let addedSpace = false;
 
     // The current token we will be adding to the pretty printed code.
-    var token;
+    let token;
 
     // Shorthand for token.type.label, so we don't have to repeatedly access
     // properties.
-    var ttl;
+    let ttl;
 
     // Shorthand for token.type.keyword, so we don't have to repeatedly access
     // properties.
-    var ttk;
+    let ttk;
 
     // The last token we added to the pretty printed code.
-    var lastToken;
+    let lastToken;
 
     // Stack of token types/keywords that can affect whether we want to add a
     // newline or a space. We can make that decision based on what token type is
@@ -795,7 +801,7 @@
     // The difference between "[" and "[\n" is that "[\n" is used when we are
     // treating "[" and "]" tokens as line delimiters and should increment and
     // decrement the indent level when we find them.
-    var stack = [];
+    const stack = [];
 
     // Pass through acorn's tokenizer and append tokens and comments into a
     // single queue to process.  For example, the source file:
@@ -808,9 +814,9 @@
     // After this process, tokenQueue has the following token stream:
     //
     //     [ foo, '// a', '// b', bar]
-    var tokenQueue = [];
+    const tokenQueue = [];
 
-    var tokens = acorn.tokenizer(input, {
+    const tokens = acorn.tokenizer(input, {
       locations: true,
       sourceFile: options.url,
       onComment: function (block, text, start, end, startLoc, endLoc) {
@@ -827,25 +833,25 @@
     for (;;) {
       token = tokens.getToken();
       tokenQueue.push(token);
-      if (token.type.label == "eof") {
+      if (token.type.label === "eof") {
         break;
       }
     }
 
-    for (var i = 0; i < tokenQueue.length; i++) {
+    for (let i = 0; i < tokenQueue.length; i++) {
       token = tokenQueue[i];
-      var nextToken = tokenQueue[i + 1];
+      const nextToken = tokenQueue[i + 1];
 
       if (token.comment) {
-        var commentIndentLevel = indentLevel;
-        if (lastToken && (lastToken.loc.end.line == token.loc.start.line)) {
+        let commentIndentLevel = indentLevel;
+        if (lastToken && (lastToken.loc.end.line === token.loc.start.line)) {
           commentIndentLevel = 0;
           write(" ");
         }
         addedNewline = addComment(write, commentIndentLevel, options,
-                                  token.block, token.text,
-                                  token.loc.start.line, token.loc.start.column,
-                                  nextToken);
+          token.block, token.text,
+          token.loc.start.line, token.loc.start.column,
+          nextToken);
         addedSpace = !addedNewline;
         continue;
       }
@@ -853,7 +859,7 @@
       ttk = token.type.keyword;
       ttl = token.type.label;
 
-      if (ttl == "eof") {
+      if (ttl === "eof") {
         if (!addedNewline) {
           write("\n");
         }
@@ -872,28 +878,28 @@
 
       if (decrementsIndent(ttl, stack)) {
         indentLevel--;
-        if (ttl == "}"
+        if (ttl === "}"
             && stack.length > 1
-            && stack[stack.length - 2] == "switch") {
+            && stack[stack.length - 2] === "switch") {
           indentLevel--;
         }
       }
 
       prependWhiteSpace(token, lastToken, addedNewline, addedSpace, write, options,
-                        indentLevel, stack);
+        indentLevel, stack);
       addToken(token, write);
       addedSpace = false;
 
       // If the next token is going to be a comment starting on the same line,
       // then no need to add one here
-      if (!nextToken || !nextToken.comment || token.loc.end.line != nextToken.loc.start.line) {
+      if (!nextToken || !nextToken.comment || token.loc.end.line !== nextToken.loc.start.line) {
         addedNewline = appendNewline(token, write, stack);
       }
 
       if (shouldStackPop(token, stack)) {
         stack.pop();
-        if (ttl == "}" && stack.length
-            && stack[stack.length - 1] == "switch") {
+        if (ttl === "}" && stack.length
+            && stack[stack.length - 1] === "switch") {
           stack.pop();
         }
       }

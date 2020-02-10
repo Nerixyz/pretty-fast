@@ -11,14 +11,14 @@
   "license": "BSD",
   "main": "pretty-fast.js",
   "scripts": {
-    "eslint": "eslint -f compact pretty-fast.js",
+    "eslint": "eslint pretty-fast.js --fix",
     "test": "npm run eslint && node test.js"
   },
   "bin": {
     "pretty-fast": "./bin/pretty-fast"
   },
   "devDependencies": {
-    "eslint": "0.6.2"
+    "eslint": "^6.8.0"
   },
   "dependencies": {
     "source-map": "^0.5.7",

@@ -6,11 +6,11 @@
  * http://opensource.org/licenses/BSD-2-Clause
  */
 
-var fs = require("fs");
-var path = require("path");
-var prettyFast = require("pretty-fast");
+const fs = require("fs");
+const path = require("path");
+const prettyFast = require("pretty-fast");
 
-var argv = require('optimist')
+const argv = require("optimist")
   .usage("Pretty print a JavaScript file and generate a source map.\n\nUsage:\n\n\t$0 [options] file")
   .options("o", {
     alias: "out",
@@ -38,14 +38,14 @@ var argv = require('optimist')
   .argv;
 
 function main() {
-  var inputFile = argv._[0];
+  const inputFile = argv._[0];
   fs.readFile(inputFile, function (err, data) {
     if (err) {
       throw err;
     }
 
-    var start = Date.now();
-    var result = prettyFast(data, {
+    const start = Date.now();
+    const result = prettyFast(data, {
       url: inputFile,
       indent: argv.indent
     });
@@ -61,11 +61,10 @@ function main() {
 
 function writeOut(file, mapFile, code) {
   if (mapFile) {
-    code += "\n//# sourceMappingURL=" + path.relative(path.dirname(file),
-                                                      mapFile);
+    code += "\n//# sourceMappingURL=" + path.relative(path.dirname(file), mapFile);
   }
 
-  if (file == "-") {
+  if (file === "-") {
     console.log(code);
   } else {
     fs.writeFile(file, code, ifErrorThrow);
